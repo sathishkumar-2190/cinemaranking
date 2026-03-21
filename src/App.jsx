@@ -13,6 +13,9 @@ import DiscoverPage from "./pages/DiscoverPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import RecommendationsPage from "./pages/RecommendationsPage";
+import FavouriteActorsPage from "./pages/FavouriteActorsPage";
+import ListsPage from "./pages/ListsPage";
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
           <Route path="/keywords"               element={<KeywordsPage />} />
           <Route path="/auth"                   element={<AuthPage />} />
           <Route path="/profile"                element={<ProfilePage />} />
+          <Route path="/for-you"                element={<RecommendationsPage />} />
+          <Route path="/actors"                 element={<FavouriteActorsPage />} />
+          <Route path="/lists"                  element={<ListsPage />} />
           <Route path="/details/:mediaType/:id" element={<MovieDetails />} />
           <Route path="/person/:personId"       element={<PersonPage />} />
           <Route path="*"                       element={<div className="p-10">Page Not Found</div>} />

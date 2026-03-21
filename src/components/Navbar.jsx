@@ -8,11 +8,11 @@ const GOLD = "#F5C518";
 function Navbar() {
   const [query,    setQuery]    = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
   const navigate  = useNavigate();
   const location  = useLocation();
   const { watchlist } = useWatchlistContext();
   const { user, signOut } = useAuth();
-
   const totalCount = watchlist.movies.length + watchlist.series.length;
 
   const handleSearch = (e) => {
@@ -24,8 +24,7 @@ function Navbar() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    await signOut(); navigate("/");
   };
 
   const lc = (path) =>
@@ -38,9 +37,11 @@ function Navbar() {
     { to: "/keywords", label: "🎭 Browse by Mood" },
     { to: "/upcoming", label: "📅 Upcoming" },
     { to: "/rankings", label: "🏆 Rankings" },
+    { to: "/for-you",  label: "🎯 For You" },
+    { to: "/actors",   label: "🎭 Favourite Actors" },
+    { to: "/lists",    label: "📋 My Lists" },
   ];
 
-  // Get initials for avatar
   const initials = user?.email?.slice(0, 2).toUpperCase() || "";
 
   return (
@@ -75,7 +76,7 @@ function Navbar() {
               More ▾
             </button>
             {moreOpen && (
-              <div className="absolute top-8 right-0 bg-neutral-900 border border-neutral-700 rounded-xl py-2 w-48 z-50"
+              <div className="absolute top-8 right-0 bg-neutral-900 border border-neutral-700 rounded-xl py-2 w-52 z-50"
                    onMouseLeave={() => setMoreOpen(false)}>
                 {moreLinks.map(l => (
                   <Link key={l.to} to={l.to} onClick={() => setMoreOpen(false)}
@@ -98,35 +99,48 @@ function Navbar() {
             </Link>
           </li>
 
-          {/* AUTH — logged in shows avatar, logged out shows login button */}
+          {/* AUTH */}
           {user ? (
-            <li className="relative group">
+            <li className="relative">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-black cursor-pointer"
-                   style={{ backgroundColor: GOLD }}>
+                   style={{ backgroundColor: GOLD }}
+                   onClick={() => setUserOpen(o => !o)}>
                 {initials}
               </div>
-              {/* DROPDOWN on hover */}
-              <div className="absolute top-10 right-0 bg-neutral-900 border border-neutral-700 rounded-xl py-2 w-44 z-50 hidden group-hover:block">
-                <Link to="/profile"
-                  className="block px-4 py-2.5 text-sm text-gray-300 hover:text-yellow-400 hover:bg-neutral-800 transition">
-                  👤 Profile
-                </Link>
-                <button onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-neutral-800 transition">
-                  Sign Out
-                </button>
-              </div>
+              {userOpen && (
+                <div className="absolute top-10 right-0 bg-neutral-900 border border-neutral-700 rounded-xl py-2 w-44 z-50"
+                     onMouseLeave={() => setUserOpen(false)}>
+                  <Link to="/profile" onClick={() => setUserOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-300 hover:text-yellow-400 hover:bg-neutral-800 transition">
+                    👤 Profile
+                  </Link>
+                  <Link to="/for-you" onClick={() => setUserOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-300 hover:text-yellow-400 hover:bg-neutral-800 transition">
+                    🎯 For You
+                  </Link>
+                  <Link to="/actors" onClick={() => setUserOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-300 hover:text-yellow-400 hover:bg-neutral-800 transition">
+                    🎭 Favourite Actors
+                  </Link>
+                  <Link to="/lists" onClick={() => setUserOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-300 hover:text-yellow-400 hover:bg-neutral-800 transition">
+                    📋 My Lists
+                  </Link>
+                  <hr className="border-neutral-700 my-1" />
+                  <button onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-neutral-800 transition">
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </li>
           ) : (
             <li>
               <Link to="/auth"
                 className="px-4 py-1.5 rounded-full text-sm font-bold text-black transition hover:opacity-90"
-                style={{ backgroundColor: GOLD }}>
-                Login
-              </Link>
+                style={{ backgroundColor: GOLD }}>Login</Link>
             </li>
           )}
-
         </ul>
       </div>
     </nav>
