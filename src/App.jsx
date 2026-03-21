@@ -16,6 +16,7 @@ import ProfilePage from "./pages/ProfilePage";
 import RecommendationsPage from "./pages/RecommendationsPage";
 import FavouriteActorsPage from "./pages/FavouriteActorsPage";
 import ListsPage from "./pages/ListsPage";
+import ListDetailPage from "./pages/ListDetailPage";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Route path="/for-you"                element={<RecommendationsPage />} />
           <Route path="/actors"                 element={<FavouriteActorsPage />} />
           <Route path="/lists"                  element={<ListsPage />} />
+          <Route path="/list/:slug"             element={<ListDetailPage />} />
           <Route path="/details/:mediaType/:id" element={<MovieDetails />} />
           <Route path="/person/:personId"       element={<PersonPage />} />
           <Route path="*"                       element={<div className="p-10">Page Not Found</div>} />

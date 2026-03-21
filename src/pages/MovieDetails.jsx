@@ -10,6 +10,7 @@ import SkeletonCard from "../components/SkeletonCard";
 import CollectionSection from "../components/CollectionSection";
 import noPoster from "../assets/no-poster.png";
 import StarRating from "../components/StarRating";
+import AddToListButton from "../components/AddToListButton";
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
 const IMGB = "https://image.tmdb.org/t/p/w300";
@@ -298,6 +299,7 @@ function MovieDetails() {
               className="px-6 py-2 rounded font-semibold transition border-2"
               style={inList ? {backgroundColor:GOLD,color:"#000",borderColor:GOLD} : {backgroundColor:"transparent",color:"#fff",borderColor:"#fff"}}>
               {inList ? "✓ In My List" : "+ My List"}
+              <AddToListButton movie={movie} mediaType={mediaType} />
             </button>
             <div className="mt-4">
               <StarRating tmdbId={id} mediaType={mediaType} />
