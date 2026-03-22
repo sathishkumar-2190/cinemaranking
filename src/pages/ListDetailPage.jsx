@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────
-//  ListDetailPage — view a single list
-//  Shows all movies/series in the list
-//  Accessible via /list/:slug
-// ─────────────────────────────────────────────
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
@@ -13,49 +8,75 @@ const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
 
 function ListDetailPage() {
-  const { slug }    = useParams();
-  const { user }    = useAuth();
-  const navigate    = useNavigate();
-  const [list,      setList]      = useState(null);
-  const [items,     setItems]     = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [copyMsg,   setCopyMsg]   = useState("");
-  const [notFound,  setNotFound]  = useState(false);
+  const { slug }   = useParams();
+  const { user }   = useAuth();
+  const navigate   = useNavigate();
 
-  useEffect(() => {
-    loadList();
-  }, [slug]);
+  const [list,     setList]     = useState(null);
+  const [items,    setItems]    = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [copyMsg,  setCopyMsg]  = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [editNote, setEditNote] = useState(null); // item id being edited
+
+  // Drag state
+  const dragIndex  = useRef(null);
+  const hoverIndex = useRef(null);
+
+  useEffect(() => { loadList(); }, [slug]);
 
   const loadList = async () => {
     setLoading(true);
-
-    // Load the list
     const { data: listData } = await supabase
-      .from("lists")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
+      .from("lists").select("*").eq("slug", slug).single();
     if (!listData) { setNotFound(true); setLoading(false); return; }
     setList(listData);
-
-    // Load items
     const { data: itemsData } = await supabase
-      .from("list_items")
-      .select("*")
-      .eq("list_id", listData.id)
+      .from("list_items").select("*").eq("list_id", listData.id)
       .order("rank", { ascending: true });
-
     setItems(itemsData || []);
     setLoading(false);
   };
 
   const removeItem = async (tmdbId) => {
     setItems(prev => prev.filter(i => i.tmdb_id !== tmdbId));
-    await supabase.from("list_items")
-      .delete()
-      .eq("list_id", list.id)
-      .eq("tmdb_id", tmdbId);
+    await supabase.from("list_items").delete()
+      .eq("list_id", list.id).eq("tmdb_id", tmdbId);
+  };
+
+  // ── DRAG & DROP ──────────────────────────────
+  const handleDragStart = (index) => { dragIndex.current = index; };
+  const handleDragOver  = (e, index) => { e.preventDefault(); hoverIndex.current = index; };
+  const handleDrop      = async () => {
+    const from = dragIndex.current;
+    const to   = hoverIndex.current;
+    if (from === null || to === null || from === to) return;
+
+    const updated = [...items];
+    const [moved] = updated.splice(from, 1);
+    updated.splice(to, 0, moved);
+
+    // Update ranks
+    const withRanks = updated.map((item, i) => ({ ...item, rank: i + 1 }));
+    setItems(withRanks);
+
+    dragIndex.current = hoverIndex.current = null;
+
+    // Save to Supabase
+    await Promise.all(
+      withRanks.map(item =>
+        supabase.from("list_items").update({ rank: item.rank })
+          .eq("list_id", list.id).eq("tmdb_id", item.tmdb_id)
+      )
+    );
+  };
+
+  // ── NOTES ────────────────────────────────────
+  const saveNote = async (itemId, tmdbId, note) => {
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, note } : i));
+    setEditNote(null);
+    await supabase.from("list_items").update({ note })
+      .eq("list_id", list.id).eq("tmdb_id", tmdbId);
   };
 
   const copyLink = () => {
@@ -81,9 +102,7 @@ function ListDetailPage() {
     <div className="min-h-screen bg-neutral-900 flex flex-col items-center justify-center gap-4">
       <p className="text-5xl">📋</p>
       <p className="text-xl font-bold text-white">List not found</p>
-      <Link to="/lists" style={{ color: GOLD }} className="text-sm hover:underline">
-        ← Back to My Lists
-      </Link>
+      <Link to="/lists" style={{ color: GOLD }} className="text-sm hover:underline">← Back to My Lists</Link>
     </div>
   );
 
@@ -110,31 +129,28 @@ function ListDetailPage() {
               {list.is_public && " · Public"}
             </p>
           </div>
-
-          {/* ACTIONS */}
           <div className="flex gap-3">
             <button onClick={copyLink}
               className="px-4 py-2 rounded-full text-sm font-bold border border-neutral-600 text-gray-300 hover:border-yellow-400 hover:text-yellow-400 transition">
               {copyMsg || "🔗 Share"}
             </button>
-            {isOwner && (
-              <Link to="/lists"
-                className="px-4 py-2 rounded-full text-sm font-bold border border-neutral-600 text-gray-300 hover:border-yellow-400 transition">
-                Manage Lists
-              </Link>
-            )}
           </div>
         </div>
       </div>
+
+      {/* DRAG HINT */}
+      {isOwner && items.length > 1 && (
+        <p className="text-gray-500 text-xs mb-6 flex items-center gap-2">
+          <span>☰</span> Drag items to reorder · Click note to edit
+        </p>
+      )}
 
       {/* EMPTY STATE */}
       {items.length === 0 && (
         <div className="flex flex-col items-center py-24 gap-3">
           <p className="text-5xl">🎬</p>
           <p className="text-xl font-semibold text-gray-300">This list is empty</p>
-          <p className="text-gray-500 text-sm">
-            Go to any movie or series detail page and click "Add to List"
-          </p>
+          <p className="text-gray-500 text-sm">Go to any movie or series and click "Add to List"</p>
           <Link to="/"
             className="px-6 py-2 rounded-full font-bold text-sm text-black mt-2 hover:opacity-90 transition"
             style={{ backgroundColor: GOLD }}>
@@ -143,41 +159,95 @@ function ListDetailPage() {
         </div>
       )}
 
-      {/* ITEMS GRID */}
+      {/* LIST ITEMS — card layout with drag, notes, remove */}
       {items.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div className="max-w-3xl space-y-3">
           {items.map((item, index) => (
-            <div key={item.id} className="group">
-              <div className="relative overflow-hidden rounded-xl cursor-pointer"
-                   onClick={() => goTo(item)}>
-                <img
-                  src={item.poster_path ? `${IMG}${item.poster_path}` : noPoster}
-                  alt={item.title} loading="lazy"
-                  className="w-full h-auto object-cover transition duration-300 group-hover:scale-105"
-                  onError={e=>{e.target.onerror=null;e.target.src=noPoster;}}
-                />
-                {/* RANK BADGE */}
-                <span className="absolute top-2 left-2 text-xs font-bold px-2 py-1 rounded"
+            <div
+              key={item.id}
+              draggable={isOwner}
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDrop={handleDrop}
+              className="flex items-start gap-4 bg-neutral-800 rounded-xl p-4 transition hover:bg-neutral-750 group"
+              style={{ borderLeft: `4px solid ${GOLD}`, cursor: isOwner ? "grab" : "default" }}
+            >
+              {/* RANK */}
+              <div className="text-3xl font-bold shrink-0 w-10 text-center"
+                   style={{ color: GOLD, opacity: 0.8 }}>
+                {index + 1}
+              </div>
+
+              {/* DRAG HANDLE (owner only) */}
+              {isOwner && (
+                <div className="shrink-0 flex flex-col gap-1 pt-3 opacity-30 group-hover:opacity-70 transition">
+                  {[1,2,3].map(i => <div key={i} className="w-4 h-0.5 bg-gray-400 rounded" />)}
+                </div>
+              )}
+
+              {/* POSTER */}
+              <img
+                src={item.poster_path ? `${IMG}${item.poster_path}` : noPoster}
+                alt={item.title}
+                className="w-14 h-20 object-cover rounded-lg shrink-0 cursor-pointer hover:opacity-80 transition"
+                onClick={() => goTo(item)}
+                onError={e=>{e.target.onerror=null;e.target.src=noPoster;}}
+              />
+
+              {/* INFO */}
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="font-bold text-white cursor-pointer hover:underline line-clamp-1 text-sm"
+                  onClick={() => goTo(item)}>
+                  {item.title}
+                </h3>
+
+                <span className="text-xs px-2 py-0.5 rounded font-bold mt-1 inline-block"
                       style={{ backgroundColor: GOLD, color: "#000" }}>
-                  #{index + 1}
-                </span>
-                {/* TYPE BADGE */}
-                <span className="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded bg-black/70">
                   {item.media_type === "tv" ? "Series" : "Movie"}
                 </span>
-                {/* REMOVE BUTTON (owner only) */}
-                {isOwner && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeItem(item.tmdb_id); }}
-                    className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-red-600/80 text-white text-sm font-bold opacity-0 group-hover:opacity-100 transition flex items-center justify-center hover:bg-red-500">
-                    ✕
-                  </button>
+
+                {/* NOTE */}
+                {isOwner ? (
+                  editNote === item.id ? (
+                    <div className="mt-2">
+                      <input
+                        autoFocus
+                        type="text"
+                        defaultValue={item.note || ""}
+                        placeholder="Add a note..."
+                        className="w-full bg-neutral-700 text-white text-xs px-3 py-2 rounded-lg outline-none border border-neutral-600 focus:border-yellow-400 transition"
+                        onBlur={e => saveNote(item.id, item.tmdb_id, e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") saveNote(item.id, item.tmdb_id, e.target.value);
+                          if (e.key === "Escape") setEditNote(null);
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Press Enter to save · Esc to cancel</p>
+                    </div>
+                  ) : (
+                    <p
+                      className="mt-2 text-xs cursor-pointer hover:text-yellow-400 transition line-clamp-2"
+                      style={{ color: item.note ? "#aaa" : "#555" }}
+                      onClick={() => setEditNote(item.id)}>
+                      {item.note ? `📝 ${item.note}` : "+ Add note..."}
+                    </p>
+                  )
+                ) : (
+                  item.note && (
+                    <p className="mt-2 text-xs text-gray-400 line-clamp-2">📝 {item.note}</p>
+                  )
                 )}
               </div>
-              <p className="mt-2 text-sm font-semibold line-clamp-2 cursor-pointer group-hover:text-yellow-400 transition"
-                 onClick={() => goTo(item)}>
-                {item.title}
-              </p>
+
+              {/* REMOVE (owner only) */}
+              {isOwner && (
+                <button
+                  onClick={() => removeItem(item.tmdb_id)}
+                  className="shrink-0 text-gray-600 hover:text-red-400 transition text-lg font-bold px-1 pt-1">
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>
