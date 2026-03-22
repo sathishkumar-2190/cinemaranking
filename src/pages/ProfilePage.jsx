@@ -84,8 +84,8 @@ function ProfilePage() {
         <h2 className="text-lg font-bold mb-4" style={{ color: GOLD }}>Quick Links</h2>
 
         {[
-          { to: "/watchlist", icon: "🎬", label: "My Movie List", count: watchlist.movies.length },
-          { to: "/watchlist", icon: "📺", label: "My Series List", count: watchlist.series.length },
+          { to: "/watchlist", icon: "🎬", label: "Movie Watchlist", count: watchlist.movies.length },
+          { to: "/watchlist", icon: "📺", label: "Series Watchlist", count: watchlist.series.length },
           { to: "/rankings",  icon: "🏆", label: "Rankings" },
           { to: "/discover",  icon: "🔍", label: "Discover" },
         ].map(link => (

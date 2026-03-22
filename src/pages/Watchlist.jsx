@@ -155,7 +155,7 @@ function Watchlist() {
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-2">
         <div className="w-1 h-10 rounded" style={{ backgroundColor: GOLD }} />
-        <h1 className="text-4xl font-bold">My List</h1>
+        <h1 className="text-4xl font-bold">Watchlist</h1>
         <span className="ml-2 text-gray-400 text-lg">
           ({watchlist.movies.length + watchlist.series.length} total)
         </span>

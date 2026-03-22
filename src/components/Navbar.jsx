@@ -88,10 +88,10 @@ function Navbar() {
             )}
           </li>
 
-          {/* MY LIST */}
+          {/* Watchlist */}
           <li>
             <Link to="/watchlist" className={`relative ${lc("/watchlist")}`}>
-              My List
+              Watchlist
               {totalCount > 0 && (
                 <span className="absolute -top-2 -right-4 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center text-black"
                       style={{ backgroundColor: GOLD }}>{totalCount}</span>

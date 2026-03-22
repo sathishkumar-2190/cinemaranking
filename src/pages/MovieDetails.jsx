@@ -298,7 +298,7 @@ function MovieDetails() {
             <button onClick={handleWatchlist}
               className="px-6 py-2 rounded font-semibold transition border-2"
               style={inList ? {backgroundColor:GOLD,color:"#000",borderColor:GOLD} : {backgroundColor:"transparent",color:"#fff",borderColor:"#fff"}}>
-              {inList ? "✓ In My List" : "+ My List"}
+              {inList ? "✓ In Watchlist" : "+ Watchlist"}
               <AddToListButton movie={movie} mediaType={mediaType} />
             </button>
             <div className="mt-4">
