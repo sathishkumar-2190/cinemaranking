@@ -8,9 +8,10 @@ import TrailerModal from "../components/TrailerModal";
 import CastCard from "../components/CastCard";
 import SkeletonCard from "../components/SkeletonCard";
 import CollectionSection from "../components/CollectionSection";
-import noPoster from "../assets/no-poster.png";
 import StarRating from "../components/StarRating";
 import AddToListButton from "../components/AddToListButton";
+import noPoster from "../assets/no-poster.png";
+
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
 const IMGB = "https://image.tmdb.org/t/p/w300";
@@ -21,33 +22,33 @@ function WatchProviders({ providers }) {
   const preferred = ["IN","US","GB","AU","CA"].find(r => providers?.[r]?.flatrate);
   const [region,  setRegion] = useState(preferred || regions[0] || "");
   if (!providers || !regions.length) return null;
-  const flat  = providers[region]?.flatrate || [];
-  const rent  = providers[region]?.rent || [];
-  const buy   = providers[region]?.buy  || [];
+  const flat = providers[region]?.flatrate || [];
+  const rent = providers[region]?.rent || [];
   return (
-    <div className="mb-6">
+    <div className="mb-5">
       <div className="flex items-center gap-3 mb-2 flex-wrap">
-        <h3 className="text-sm font-semibold text-gray-300">Where to Watch</h3>
-        <select value={region} onChange={e=>setRegion(e.target.value)}
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Where to Watch</h3>
+        <select value={region} onChange={e => setRegion(e.target.value)}
           className="bg-neutral-700 text-white text-xs px-2 py-1 rounded border border-neutral-600 outline-none">
           {regions.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
-      {flat.length > 0 && (
-        <div className="flex gap-2 flex-wrap mb-2">
+      {flat.length > 0 ? (
+        <div className="flex gap-2 flex-wrap">
           {flat.map(p => (
             <div key={p.provider_id} title={p.provider_name}
               className="flex items-center gap-2 bg-neutral-800 px-3 py-2 rounded-lg border border-neutral-700">
-              <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} className="w-5 h-5 rounded" />
+              <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`}
+                alt={p.provider_name} className="w-5 h-5 rounded" />
               <span className="text-xs text-white">{p.provider_name}</span>
             </div>
           ))}
         </div>
-      )}
-      {!flat.length && rent.length > 0 && (
-        <p className="text-xs text-gray-400">Available to rent/buy on: {rent.slice(0,3).map(p=>p.provider_name).join(", ")}</p>
-      )}
-      {!flat.length && !rent.length && (
+      ) : rent.length > 0 ? (
+        <p className="text-xs text-gray-400">
+          Rent/Buy: {rent.slice(0,3).map(p=>p.provider_name).join(", ")}
+        </p>
+      ) : (
         <p className="text-xs text-gray-500">Not available for streaming in {region}</p>
       )}
     </div>
@@ -152,7 +153,9 @@ function SeasonsSection({ tvId }) {
         {seasons.map(s => (
           <button key={s.id} onClick={() => selectSeason(s)}
             className="px-4 py-2 rounded-full text-sm font-semibold transition"
-            style={activeSeason?.id===s.id ? {backgroundColor:GOLD,color:"#000"} : {border:"1px solid #555",color:"#aaa"}}>
+            style={activeSeason?.id===s.id
+              ? {backgroundColor:GOLD,color:"#000"}
+              : {border:"1px solid #555",color:"#aaa"}}>
             Season {s.season_number}
             <span className="ml-1 text-xs opacity-70">({s.episode_count})</span>
           </button>
@@ -179,7 +182,9 @@ function SeasonsSection({ tvId }) {
                 {ep.overview && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{ep.overview}</p>}
               </div>
               {ep.vote_average > 0 && (
-                <span className="text-sm font-bold shrink-0" style={{color:GOLD}}>★ {ep.vote_average.toFixed(1)}</span>
+                <span className="text-sm font-bold shrink-0" style={{color:GOLD}}>
+                  ★ {ep.vote_average.toFixed(1)}
+                </span>
               )}
             </div>
           ))}
@@ -219,7 +224,10 @@ function MovieDetails() {
     navigate(`/details/${item.media_type||mediaType}/${item.id}`);
     window.scrollTo({ top: 0 });
   };
-  const goToPerson = (pid) => { navigate(`/person/${pid}`); window.scrollTo({top:0}); };
+  const goToPerson = (pid) => {
+    navigate(`/person/${pid}`);
+    window.scrollTo({ top: 0 });
+  };
 
   const handlePlay = async () => {
     const key = await fetchTrailer(id, mediaType);
@@ -227,24 +235,31 @@ function MovieDetails() {
     setVideoKey(key); setShowTrailer(true);
   };
 
-  const handleWatchlist = () => {
-    const list = mediaType==="tv" ? "series" : "movies";
+  const handleWatchlist = (e) => {
+    // Prevent event bubbling
+    e.stopPropagation();
+    const list = mediaType === "tv" ? "series" : "movies";
     if (isInWatchlist(Number(id))) removeFromWatchlist(Number(id), list);
-    else addToWatchlist({...movie, media_type:mediaType});
+    else addToWatchlist({ ...movie, media_type: mediaType });
   };
 
-  if (!movie) return <div className="min-h-screen bg-neutral-900"><div className="h-[80vh] bg-neutral-800 animate-pulse"/></div>;
+  if (!movie) return (
+    <div className="min-h-screen bg-neutral-900">
+      <div className="h-[80vh] bg-neutral-800 animate-pulse" />
+    </div>
+  );
 
-  const title    = movie.title || movie.name;
-  const backdrop = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : "";
-  const year     = (movie.release_date||movie.first_air_date||"").split("-")[0];
-  const inList   = isInWatchlist(Number(id));
-  const runtime  = movie.runtime ? `${Math.floor(movie.runtime/60)}h ${movie.runtime%60}m` : null;
-  const budget   = movie.budget > 0 ? `$${(movie.budget/1e6).toFixed(0)}M` : null;
-  const revenue  = movie.revenue > 0 ? `$${(movie.revenue/1e6).toFixed(0)}M` : null;
-  const imdbId   = movie.external_ids?.imdb_id;
-  const providers= movie["watch/providers"]?.results;
-  const collId   = movie.belongs_to_collection?.id;
+  const title     = movie.title || movie.name;
+  const backdrop  = movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : "";
+  const year      = (movie.release_date||movie.first_air_date||"").split("-")[0];
+  const inList    = isInWatchlist(Number(id));
+  const runtime   = movie.runtime ? `${Math.floor(movie.runtime/60)}h ${movie.runtime%60}m` : null;
+  const budget    = movie.budget > 0 ? `$${(movie.budget/1e6).toFixed(0)}M` : null;
+  const revenue   = movie.revenue > 0 ? `$${(movie.revenue/1e6).toFixed(0)}M` : null;
+  const imdbId    = movie.external_ids?.imdb_id;
+  const providers = movie["watch/providers"]?.results;
+  const collId    = movie.belongs_to_collection?.id;
 
   return (
     <div className="text-white bg-neutral-900 min-h-screen">
@@ -253,34 +268,50 @@ function MovieDetails() {
       <div className="relative h-[80vh] bg-cover bg-center flex items-end"
            style={{ backgroundImage:`url(${backdrop})` }}>
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-black/60 to-transparent" />
+
         <div className="relative z-10 p-10 max-w-3xl">
           <h1 className="text-5xl font-bold mb-3">{title}</h1>
 
+          {/* META */}
           <div className="flex gap-3 text-gray-300 mb-3 items-center flex-wrap text-sm">
-            <span className="font-bold text-lg" style={{color:GOLD}}>★ {movie.vote_average?.toFixed(1)}</span>
+            <span className="font-bold text-lg" style={{color:GOLD}}>
+              ★ {movie.vote_average?.toFixed(1)}
+            </span>
             {year && <span>{year}</span>}
             {runtime && <span>{runtime}</span>}
-            <span className="uppercase text-xs px-2 py-1 rounded font-bold" style={{backgroundColor:GOLD,color:"#000"}}>
+            <span className="uppercase text-xs px-2 py-1 rounded font-bold"
+                  style={{backgroundColor:GOLD,color:"#000"}}>
               {mediaType==="tv" ? "Series" : "Movie"}
             </span>
             {movie.status && movie.status!=="Released" && (
-              <span className="text-xs px-2 py-1 rounded border border-green-500 text-green-400">{movie.status}</span>
+              <span className="text-xs px-2 py-1 rounded border border-green-500 text-green-400">
+                {movie.status}
+              </span>
             )}
             {imdbId && (
-              <a href={`https://www.imdb.com/title/${imdbId}`} target="_blank" rel="noreferrer"
+              <a href={`https://www.imdb.com/title/${imdbId}`}
+                target="_blank" rel="noreferrer"
                 className="text-xs px-2 py-1 rounded font-bold hover:opacity-80 transition"
-                style={{backgroundColor:GOLD,color:"#000"}}>IMDb ↗</a>
+                style={{backgroundColor:"#f5c518",color:"#000"}}
+                onClick={e => e.stopPropagation()}>
+                IMDb ↗
+              </a>
             )}
           </div>
 
+          {/* GENRES */}
           <div className="flex gap-2 flex-wrap mb-3">
             {movie.genres?.map(g => (
-              <span key={g.id} className="text-xs px-2 py-1 rounded border border-neutral-600 text-gray-300">{g.name}</span>
+              <span key={g.id}
+                className="text-xs px-2 py-1 rounded border border-neutral-600 text-gray-300">
+                {g.name}
+              </span>
             ))}
           </div>
 
           <p className="text-gray-200 mb-4 max-w-xl text-sm leading-relaxed">{movie.overview}</p>
 
+          {/* BUDGET / REVENUE */}
           {(budget||revenue) && (
             <div className="flex gap-4 mb-4 text-sm text-gray-400">
               {budget  && <span>Budget: <span className="text-white font-semibold">{budget}</span></span>}
@@ -288,23 +319,38 @@ function MovieDetails() {
             </div>
           )}
 
+          {/* WHERE TO WATCH */}
           <WatchProviders providers={providers} />
 
-          <div className="flex gap-4 flex-wrap">
+          {/* ── ACTION BUTTONS ── */}
+          <div className="flex gap-3 flex-wrap items-center">
+
+            {/* PLAY TRAILER */}
             <button onClick={handlePlay}
-              className="bg-white text-black px-6 py-2 rounded font-semibold hover:bg-gray-200 transition">
+              className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-200 transition flex items-center gap-2">
               ▶ Play Trailer
             </button>
-            <button onClick={handleWatchlist}
-              className="px-6 py-2 rounded font-semibold transition border-2"
-              style={inList ? {backgroundColor:GOLD,color:"#000",borderColor:GOLD} : {backgroundColor:"transparent",color:"#fff",borderColor:"#fff"}}>
-              {inList ? "✓ In Watchlist" : "+ Watchlist"}
-              <AddToListButton movie={movie} mediaType={mediaType} />
+
+            {/* WATCHLIST BUTTON — clean toggle */}
+            <button
+              onClick={handleWatchlist}
+              className="px-6 py-2.5 rounded-full font-bold text-sm transition border-2 flex items-center gap-2"
+              style={inList
+                ? { backgroundColor: GOLD, color: "#000", borderColor: GOLD }
+                : { backgroundColor: "transparent", color: "#fff", borderColor: "#fff" }}>
+              {inList ? "✓ Watchlist" : "+ Watchlist"}
             </button>
-            <div className="mt-4">
-              <StarRating tmdbId={id} mediaType={mediaType} />
-            </div>
+
+            {/* ADD TO LIST — completely separate, no overlap with watchlist */}
+            <AddToListButton movie={movie} mediaType={mediaType} />
+
           </div>
+
+          {/* STAR RATING */}
+          <div className="mt-5">
+            <StarRating tmdbId={id} mediaType={mediaType} />
+          </div>
+
         </div>
       </div>
 
@@ -313,17 +359,19 @@ function MovieDetails() {
         <h2 className="text-2xl font-bold mb-6" style={{color:GOLD}}>Cast</h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth">
           {cast.map(actor => (
-            <div key={actor.cast_id||actor.credit_id} onClick={() => goToPerson(actor.id)} className="cursor-pointer hover:opacity-80 transition">
+            <div key={actor.cast_id||actor.credit_id}
+              onClick={() => goToPerson(actor.id)}
+              className="cursor-pointer hover:opacity-80 transition">
               <CastCard actor={actor} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── COLLECTION (movies only) ── */}
+      {/* ── COLLECTION ── */}
       {mediaType==="movie" && collId && <CollectionSection collectionId={collId} />}
 
-      {/* ── SEASONS (TV only) ── */}
+      {/* ── SEASONS ── */}
       {mediaType==="tv" && <SeasonsSection tvId={id} />}
 
       {/* ── GALLERY ── */}
@@ -339,11 +387,12 @@ function MovieDetails() {
         </h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth">
           {similar.length===0
-            ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
-            : similar.map(item=>(
+            ? Array.from({length:8}).map((_,i) => <SkeletonCard key={i} />)
+            : similar.map(item => (
                 <div key={item.id} onClick={() => goToDetails(item)}
                   className="snap-start min-w-[180px] cursor-pointer hover:scale-105 transition">
-                  <img loading="lazy" src={item.poster_path ? `${IMG}${item.poster_path}` : noPoster}
+                  <img loading="lazy"
+                    src={item.poster_path ? `${IMG}${item.poster_path}` : noPoster}
                     alt={item.title||item.name} className="rounded-lg w-full"
                     onError={e=>{e.target.onerror=null;e.target.src=noPoster;}} />
                   <p className="mt-2 text-sm text-center">{item.title||item.name}</p>
@@ -353,7 +402,9 @@ function MovieDetails() {
         </div>
       </div>
 
-      {showTrailer && <TrailerModal videoKey={videoKey} onClose={()=>setShowTrailer(false)} />}
+      {showTrailer && (
+        <TrailerModal videoKey={videoKey} onClose={() => setShowTrailer(false)} />
+      )}
     </div>
   );
 }
