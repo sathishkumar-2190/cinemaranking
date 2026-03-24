@@ -1,8 +1,9 @@
 function SkeletonCard() {
   return (
-    <div className="min-w-[180px] animate-pulse">
-      <div className="bg-neutral-700 h-[270px] rounded-lg"></div>
-      <div className="bg-neutral-700 h-4 mt-3 rounded w-3/4"></div>
+    <div style={{ width: "160px", flexShrink: 0 }}>
+      <div className="skeleton rounded-xl" style={{ width: "160px", aspectRatio: "2/3" }} />
+      <div className="skeleton rounded mt-2" style={{ height: "12px", width: "80%" }} />
+      <div className="skeleton rounded mt-1" style={{ height: "10px", width: "50%" }} />
     </div>
   );
 }
