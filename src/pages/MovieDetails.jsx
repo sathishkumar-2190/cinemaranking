@@ -11,6 +11,8 @@ import CollectionSection from "../components/CollectionSection";
 import StarRating from "../components/StarRating";
 import AddToListButton from "../components/AddToListButton";
 import noPoster from "../assets/no-poster.png";
+import MovieFacts from "../components/MovieFacts";
+import RecentlyViewed from "../components/RecentlyViewed";
 
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
@@ -196,6 +198,7 @@ function SeasonsSection({ tvId }) {
 
 /* ── Main ── */
 function MovieDetails() {
+  const { addItem } = useRecentlyViewed();
   const { id, mediaType } = useParams();
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlistContext();
@@ -214,6 +217,15 @@ function MovieDetails() {
       fetchSimilar(id, mediaType),
     ]).then(([data, castData, simData]) => {
       setMovie(data);
+      
+      if (data) {
+  addItem({
+    id:          Number(id),
+    media_type:  mediaType,
+    title:       data.title || data.name,
+    poster_path: data.poster_path || null,
+  });
+}
       setCast(castData.slice(0, 10));
       setSimilar(simData.slice(0, 10));
     });
@@ -379,6 +391,7 @@ function MovieDetails() {
 
       {/* ── REVIEWS ── */}
       <Reviews reviews={movie.reviews} />
+      <MovieFacts movie={movie} />
 
       {/* ── SIMILAR ── */}
       <div className="px-10 pb-10">

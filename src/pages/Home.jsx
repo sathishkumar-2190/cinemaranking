@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import HeroBanner from "../components/HeroBanner";
 import Row from "../components/Row";
+import RecentlyViewed from "../components/RecentlyViewed";
 
 import {
   fetchTrendingMovies,
@@ -58,6 +59,7 @@ function Home() {
 
       {/* HERO */}
       <HeroBanner />
+      <RecentlyViewed />
 
       {/* ── QUICK NAV BUTTONS ──────────────────── */}
       <div className="flex gap-4 px-6 md:px-12 pt-10">
