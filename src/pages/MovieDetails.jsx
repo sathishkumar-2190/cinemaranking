@@ -12,7 +12,7 @@ import StarRating from "../components/StarRating";
 import AddToListButton from "../components/AddToListButton";
 import noPoster from "../assets/no-poster.png";
 import MovieFacts from "../components/MovieFacts";
-import RecentlyViewed from "../components/RecentlyViewed";
+import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
 
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
