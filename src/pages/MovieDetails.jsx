@@ -13,6 +13,7 @@ import AddToListButton from "../components/AddToListButton";
 import noPoster from "../assets/no-poster.png";
 import MovieFacts from "../components/MovieFacts";
 import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
+import AddToPartyButton from "../components/AddToPartyButton";
 
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
@@ -355,6 +356,7 @@ function MovieDetails() {
 
             {/* ADD TO LIST — completely separate, no overlap with watchlist */}
             <AddToListButton movie={movie} mediaType={mediaType} />
+            <AddToPartyButton movie={movie} mediaType={mediaType} />
 
           </div>
 
