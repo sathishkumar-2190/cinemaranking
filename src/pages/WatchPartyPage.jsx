@@ -241,12 +241,12 @@ function WatchPartyPage() {
     </div>
   );
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center"
-         style={{ backgroundColor: "var(--bg-primary)" }}>
-      <p style={{ color: "#666" }}>Loading party...</p>
-    </div>
-  );
+  if (loading || !party && partyId && !notFound) return (
+  <div className="min-h-screen flex items-center justify-center"
+       style={{ backgroundColor: "var(--bg-primary)" }}>
+    <p style={{ color: "#666" }}>Loading party...</p>
+  </div>
+);
 
   // ── CREATE PARTY SCREEN ──
   if (!partyId) return (
