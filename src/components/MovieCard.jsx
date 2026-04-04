@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import noPoster from "../assets/no-poster.png";
 
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 
 function MovieCard({ movie, rank }) {
+  // ✅ Skip cards with no poster — keeps rows clean
+  if (!movie.poster_path) return null;
+
   const title     = movie.title || movie.name || "Untitled";
-  const poster    = movie.poster_path ? `${IMAGE_BASE}${movie.poster_path}` : noPoster;
+  const poster    = `${IMAGE_BASE}${movie.poster_path}`;
   const mediaType = movie.media_type || "movie";
   const rating    = movie.vote_average > 0 ? movie.vote_average.toFixed(1) : null;
   const year      = (movie.release_date || movie.first_air_date || "").split("-")[0];
@@ -22,7 +24,6 @@ function MovieCard({ movie, rank }) {
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.src = noPoster; }}
           />
 
           {/* RANK NUMBER */}

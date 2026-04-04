@@ -11,9 +11,6 @@ import CollectionSection from "../components/CollectionSection";
 import StarRating from "../components/StarRating";
 import AddToListButton from "../components/AddToListButton";
 import noPoster from "../assets/no-poster.png";
-import MovieFacts from "../components/MovieFacts";
-import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
-
 
 const GOLD = "#F5C518";
 const IMG  = "https://image.tmdb.org/t/p/w342";
@@ -199,7 +196,6 @@ function SeasonsSection({ tvId }) {
 
 /* ── Main ── */
 function MovieDetails() {
-  const { addItem } = useRecentlyViewed();
   const { id, mediaType } = useParams();
   const navigate = useNavigate();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlistContext();
@@ -218,15 +214,6 @@ function MovieDetails() {
       fetchSimilar(id, mediaType),
     ]).then(([data, castData, simData]) => {
       setMovie(data);
-      
-      if (data) {
-  addItem({
-    id:          Number(id),
-    media_type:  mediaType,
-    title:       data.title || data.name,
-    poster_path: data.poster_path || null,
-  });
-}
       setCast(castData.slice(0, 10));
       setSimilar(simData.slice(0, 10));
     });
@@ -356,7 +343,6 @@ function MovieDetails() {
 
             {/* ADD TO LIST — completely separate, no overlap with watchlist */}
             <AddToListButton movie={movie} mediaType={mediaType} />
-            
 
           </div>
 
@@ -393,7 +379,6 @@ function MovieDetails() {
 
       {/* ── REVIEWS ── */}
       <Reviews reviews={movie.reviews} />
-      <MovieFacts movie={movie} />
 
       {/* ── SIMILAR ── */}
       <div className="px-10 pb-10">
@@ -403,14 +388,23 @@ function MovieDetails() {
         <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth">
           {similar.length===0
             ? Array.from({length:8}).map((_,i) => <SkeletonCard key={i} />)
-            : similar.map(item => (
+            : similar.filter(item => item.poster_path).map(item => (
                 <div key={item.id} onClick={() => goToDetails(item)}
-                  className="snap-start min-w-[180px] cursor-pointer hover:scale-105 transition">
-                  <img loading="lazy"
-                    src={item.poster_path ? `${IMG}${item.poster_path}` : noPoster}
-                    alt={item.title||item.name} className="rounded-lg w-full"
-                    onError={e=>{e.target.onerror=null;e.target.src=noPoster;}} />
-                  <p className="mt-2 text-sm text-center">{item.title||item.name}</p>
+                  className="snap-start min-w-[160px] cursor-pointer group">
+                  <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio:"2/3" }}>
+                    <img loading="lazy"
+                      src={`${IMG}${item.poster_path}`}
+                      alt={item.title||item.name}
+                      className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                    {item.vote_average > 0 && (
+                      <span className="absolute top-2 right-2 rating-badge">
+                        ★ {item.vote_average.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-center line-clamp-2 group-hover:text-yellow-400 transition">
+                    {item.title||item.name}
+                  </p>
                 </div>
               ))
           }
